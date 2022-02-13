@@ -7,7 +7,7 @@ import (
 
 type Redis struct {
 	Conn      redis.Conn
-	redisJSON *rejson.Handler
+	RedisJSON *rejson.Handler
 	//rediSearch redisSearchClient
 }
 
@@ -24,7 +24,7 @@ func Connect(host string, password string) (Redis, error) {
 
 	redisConn := Redis{
 		Conn:      conn,
-		redisJSON: redisJSON,
+		RedisJSON: redisJSON,
 		//rediSearch: redisSearchClient,
 	}
 

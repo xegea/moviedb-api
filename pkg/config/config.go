@@ -9,15 +9,24 @@ import (
 )
 
 type Config struct {
+	Env           string
+	Port          string
 	RedisHost     string
 	RedisPassword string
 }
 
-func LoadConfig(env string) (Config, error) {
+func LoadConfig(env *string) (Config, error) {
 
-	err := godotenv.Load(env)
+	err := godotenv.Load(*env)
 	if err != nil {
-		log.Printf("Error loading %s file", env)
+		log.Printf("Error loading %s file", *env)
+	}
+
+	environment := os.Getenv("ENV")
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		return Config{}, fmt.Errorf("PORT cannot be empty")
 	}
 
 	redisHost := os.Getenv("REDIS_HOST")
@@ -31,6 +40,8 @@ func LoadConfig(env string) (Config, error) {
 	}
 
 	return Config{
+		Env:           environment,
+		Port:          port,
 		RedisHost:     redisHost,
 		RedisPassword: redisPassword,
 	}, nil

@@ -2,21 +2,18 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 
+	"github.com/gorilla/mux"
 	"github.com/moviedb/api/pkg/config"
+	"github.com/moviedb/api/pkg/handler"
 	"github.com/moviedb/api/pkg/redis"
 	"github.com/moviedb/api/pkg/server"
-
-	"github.com/gin-gonic/gin"
-)
-
-var (
-	env string
 )
 
 func main() {
+
+	env := flag.String("env", ".env", "environment path")
 	flag.Parse()
 
 	cfg, err := config.LoadConfig(env)
@@ -24,17 +21,19 @@ func main() {
 		log.Fatalf("unable to load config: %+v", err)
 	}
 
-	r, err := redis.Connect(cfg.RedisHost, cfg.RedisPassword)
+	redisConn, err := redis.Connect(cfg.RedisHost, cfg.RedisPassword)
 	if err != nil {
 		log.Fatalf("unable to connect to redis: %v", err)
 	}
-	defer redis.Close(r.Conn)
+	defer redis.Close(redisConn.Conn)
 
 	srv := server.NewServer(
 		cfg,
-		r,
-		gin.Default(),
+		redisConn,
+		mux.NewRouter(),
 	)
 
-	fmt.Println(srv)
+	srv.RegisterRoute("/movie", handler.GetMovieHandler(srv), []string{"GET"})
+
+	log.Fatal(srv.Run())
 }
