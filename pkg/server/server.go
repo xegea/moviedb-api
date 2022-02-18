@@ -51,6 +51,6 @@ func (s Server) Run() error {
 	}
 	return http.ListenAndServe(
 		addr,
-		nil,
+		s.router,
 	)
 }
