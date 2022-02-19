@@ -1,6 +1,8 @@
 package redis
 
 import (
+	"fmt"
+
 	"github.com/RediSearch/redisearch-go/redisearch"
 	"github.com/gomodule/redigo/redis"
 )
@@ -17,16 +19,15 @@ func LoadRedisSearch(host string, password string) RediSearch {
 
 	clients := createClients(pool)
 
-	rsClients := RediSearch{
+	redisSearch := RediSearch{
 		clients: clients,
 	}
-	return rsClients
+	return redisSearch
 }
 
 func createClients(pool *redis.Pool) map[string]*redisearch.Client {
 
-	var clients map[string]*redisearch.Client
-	clients = make(map[string]*redisearch.Client)
+	clients := make(map[string]*redisearch.Client)
 
 	// TODO Create clients for every index dinamically retrieving the list of created indexs
 	// indexs, err = redis.String(conn.Do("FT._LIST"))
@@ -39,9 +40,20 @@ func createClients(pool *redis.Pool) map[string]*redisearch.Client {
 	return clients
 }
 
-func createIndexs() {
+// func createIndexs() {
 
-	// TODO Create Indexs for all available
-	// parameters := []string{"ON", "JSON", "SCHEMA", "$.Title.US", "AS", "title", "TEXT"}
-	// _, err = conn.Do("FT.CREATE", redis.Args{}.Add("idx:title:us").AddFlat(parameters)...)
+// 	// TODO Create Indexs for all available
+// 	// parameters := []string{"ON", "JSON", "SCHEMA", "$.Title.US", "AS", "title", "TEXT"}
+// 	// _, err = conn.Do("FT.CREATE", redis.Args{}.Add("idx:title:us").AddFlat(parameters)...)
+// }
+
+func Search(rs RediSearch, query string, page int, country string) ([]redisearch.Document, int, error) {
+	docs, total, err := rs.clients["idx:title:gb"].Search(redisearch.NewQuery(fmt.Sprint("@title:", query, "*")).
+		// SetReturnFields("title", "description", "type"). // if SetReturnFields
+		Limit(page*10, 10))
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return docs, total, nil
 }

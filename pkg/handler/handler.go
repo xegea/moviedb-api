@@ -3,6 +3,8 @@ package handler
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
@@ -30,6 +32,47 @@ type Trailer struct {
 	Description  map[string]string `json:",omitempty"`
 	Url          string            `json:",omitempty"`
 	ThumbnailUrl string            `json:",omitempty"`
+}
+
+func SearchHandler(srv server.Server) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		var page int
+		fmt.Sscan(r.URL.Query().Get("p"), &page)
+		query := r.URL.Query().Get("q")
+		country := r.URL.Query().Get("c")
+
+		docs, total, err := redis.Search(srv.Redis.RediSearch, query, page, country)
+		if err != nil {
+			srv.JSON(w, http.StatusInternalServerError, nil)
+			return
+		}
+
+		var movieList []Movie
+
+		for _, v := range docs {
+
+			var jsonbody string
+			for _, p := range v.Properties {
+				jsonbody = fmt.Sprint(p)
+			}
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			var content Movie
+			if err := json.Unmarshal([]byte(jsonbody), &content); err != nil {
+				log.Fatalf("Failed to Unmarshall %s", jsonbody)
+			}
+			movieList = append(movieList, content)
+		}
+
+		// json.NewEncoder(w).Encode(movieList)
+
+		fmt.Printf("total: %d\n", total)
+
+		srv.JSON(w, http.StatusOK, movieList)
+	}
 }
 
 func GetMovieHandler(srv server.Server) http.HandlerFunc {
@@ -79,7 +122,7 @@ func SetMovieHandler(srv server.Server) http.HandlerFunc {
 			return
 		}
 
-		srv.JSON(w, http.StatusOK, nil)
+		srv.JSON(w, http.StatusCreated, nil)
 	}
 }
 

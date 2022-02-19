@@ -35,6 +35,7 @@ func main() {
 
 	srv.RegisterRoute("/movie/{id}", handler.GetMovieHandler(srv), []string{"GET"})
 	srv.RegisterRoute("/movie", handler.SetMovieHandler(srv), []string{"POST"})
+	srv.RegisterRoute("/search/", handler.SearchHandler(srv), []string{"GET"})
 
 	log.Fatal(srv.Run())
 }
