@@ -35,14 +35,15 @@ type Trailer struct {
 func GetMovieHandler(srv server.Server) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		id, found := mux.Vars(r)["movie"]
+		id, found := mux.Vars(r)["id"]
 		if !found {
-			srv.JSON(w, http.StatusBadRequest, "request is invalid")
+			srv.JSON(w, http.StatusBadRequest, nil)
+			return
 		}
 
 		b, err := redis.GetRedisValue(srv.Redis.RedisJSON, id)
 		if err != nil {
-			srv.JSON(w, http.StatusInternalServerError, err)
+			srv.JSON(w, http.StatusNotFound, err)
 			return
 		}
 
@@ -62,7 +63,7 @@ func SetMovieHandler(srv server.Server) http.HandlerFunc {
 
 		movie := Movie{}
 		if err := json.NewDecoder(r.Body).Decode(&movie); err != nil {
-			srv.JSON(w, http.StatusBadRequest, "request is invalid")
+			srv.JSON(w, http.StatusBadRequest, err)
 			return
 		}
 
@@ -72,13 +73,13 @@ func SetMovieHandler(srv server.Server) http.HandlerFunc {
 			return
 		}
 
-		res, err := redis.SetRedisValue(srv.Redis.RedisJSON, redisKey, movie)
+		_, err = redis.SetRedisValue(srv.Redis.RedisJSON, redisKey, movie)
 		if err != nil {
 			srv.JSON(w, http.StatusInternalServerError, err)
 			return
 		}
 
-		srv.JSON(w, http.StatusOK, res)
+		srv.JSON(w, http.StatusOK, nil)
 	}
 }
 

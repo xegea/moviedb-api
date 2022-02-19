@@ -33,7 +33,7 @@ func main() {
 		mux.NewRouter(),
 	)
 
-	srv.RegisterRoute("/movie/{movie}", handler.GetMovieHandler(srv), []string{"GET"})
+	srv.RegisterRoute("/movie/{id}", handler.GetMovieHandler(srv), []string{"GET"})
 	srv.RegisterRoute("/movie", handler.SetMovieHandler(srv), []string{"POST"})
 
 	log.Fatal(srv.Run())
