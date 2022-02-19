@@ -12,11 +12,20 @@ func LoadRedisJSON(conn redis.Conn) *rejson.Handler {
 	return reJsonClient
 }
 
-func GetRedisValue(rh *rejson.Handler, redisKey string) ([]byte, error) {
-	redisValue, err := redis.Bytes(rh.JSONGet(redisKey, "."))
+func GetRedisValue(rh *rejson.Handler, key string) ([]byte, error) {
+	value, err := redis.Bytes(rh.JSONGet(key, "."))
 	if err != nil {
 		return nil, err
 	}
 
-	return redisValue, nil
+	return value, nil
+}
+
+func SetRedisValue(rh *rejson.Handler, key string, obj interface{}) (bool, error) {
+	_, err := rh.JSONSet(key, ".", obj)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
