@@ -42,7 +42,7 @@ func SearchHandler(srv server.Server) http.HandlerFunc {
 		query := r.URL.Query().Get("q")
 		country := r.URL.Query().Get("c")
 
-		docs, total, err := redis.Search(srv.Redis.RediSearch, query, page, country)
+		docs, _, err := redis.Search(srv.Redis.RediSearch, query, page, country)
 		if err != nil {
 			srv.JSON(w, http.StatusInternalServerError, err)
 			return
