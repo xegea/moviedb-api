@@ -48,12 +48,41 @@ func createClients(pool *redis.Pool) map[string]*redisearch.Client {
 // }
 
 func Search(rs RediSearch, query string, page int, country string) ([]redisearch.Document, int, error) {
-	docs, total, err := rs.clients["idx:title:gb"].Search(redisearch.NewQuery(fmt.Sprint("@title:", query, "*")).
+
+	docs, total, err := resolveClient(rs, country).Search(redisearch.NewQuery(fmt.Sprint("@title:", query, "*")).
 		// SetReturnFields("title", "description", "type"). // if SetReturnFields
-		Limit(page*10, 10))
+		Limit((page-1)*10, 10))
 	if err != nil {
 		return nil, 0, err
 	}
 
 	return docs, total, nil
+}
+
+func resolveClient(rs RediSearch, country string) *redisearch.Client {
+	var client *redisearch.Client
+
+	switch country {
+	case "es":
+		{
+			client = rs.clients["idx:title:es"]
+		}
+	case "us":
+		{
+			client = rs.clients["idx:title:us"]
+		}
+	case "de":
+		{
+			client = rs.clients["idx:title:de"]
+		}
+	case "gb":
+		{
+			client = rs.clients["idx:title:gb"]
+		}
+	default:
+		{
+			client = rs.clients["idx:title:es"]
+		}
+	}
+	return client
 }

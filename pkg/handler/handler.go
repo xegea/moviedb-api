@@ -44,7 +44,7 @@ func SearchHandler(srv server.Server) http.HandlerFunc {
 
 		docs, total, err := redis.Search(srv.Redis.RediSearch, query, page, country)
 		if err != nil {
-			srv.JSON(w, http.StatusInternalServerError, nil)
+			srv.JSON(w, http.StatusInternalServerError, err)
 			return
 		}
 
@@ -66,10 +66,6 @@ func SearchHandler(srv server.Server) http.HandlerFunc {
 			}
 			movieList = append(movieList, content)
 		}
-
-		// json.NewEncoder(w).Encode(movieList)
-
-		fmt.Printf("total: %d\n", total)
 
 		srv.JSON(w, http.StatusOK, movieList)
 	}
@@ -112,7 +108,7 @@ func SetMovieHandler(srv server.Server) http.HandlerFunc {
 
 		redisKey, err := buildNetflixRedisKey(movie.Url)
 		if err != nil {
-			srv.JSON(w, http.StatusInternalServerError, err)
+			srv.JSON(w, http.StatusInternalServerError, "")
 			return
 		}
 
