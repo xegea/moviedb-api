@@ -37,7 +37,7 @@ type Trailer struct {
 func SetMovieHandler(srv server.Server) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		if r.Header.Get("ApiKey") != srv.Config.WriteApiKey {
+		if r.Header.Get("ApiKey") != srv.Config.AdminApiKey {
 			srv.JSON(w, http.StatusForbidden, errors.New("wrong api key"))
 			return
 		}
@@ -67,7 +67,7 @@ func SetMovieHandler(srv server.Server) http.HandlerFunc {
 func SearchHandler(srv server.Server) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		if r.Header.Get("ApiKey") != srv.Config.ApiKey {
+		if r.Header.Get("ApiKey") != srv.Config.ApiKey || r.Header.Get("ApiKey") != srv.Config.AdminApiKey {
 			srv.JSON(w, http.StatusForbidden, errors.New("wrong api key"))
 			return
 		}
@@ -109,7 +109,7 @@ func SearchHandler(srv server.Server) http.HandlerFunc {
 func GetMovieHandler(srv server.Server) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		if r.Header.Get("ApiKey") != srv.Config.ApiKey {
+		if r.Header.Get("ApiKey") != srv.Config.ApiKey || r.Header.Get("ApiKey") != srv.Config.AdminApiKey {
 			srv.JSON(w, http.StatusForbidden, errors.New("wrong api key"))
 			return
 		}
