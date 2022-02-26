@@ -21,7 +21,7 @@ type Movie struct {
 	Description   map[string]string `json:",omitempty"`
 	Genre         string            `json:",omitempty"`
 	Image         string            `json:",omitempty"`
-	DateCreated   int64             `json:",omitempty"`
+	ReleaseDate   int64             `json:",omitempty"`
 	Director      []string          `json:",omitempty"`
 	Actors        []string          `json:",omitempty"`
 	Trailer       []Trailer         `json:",omitempty"`
@@ -34,13 +34,48 @@ type Trailer struct {
 	ThumbnailUrl string            `json:",omitempty"`
 }
 
+func SetMovieHandler(srv server.Server) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		if r.Header.Get("ApiKey") != srv.Config.WriteApiKey {
+			srv.JSON(w, http.StatusForbidden, errors.New("wrong api key"))
+			return
+		}
+
+		movie := Movie{}
+		if err := json.NewDecoder(r.Body).Decode(&movie); err != nil {
+			srv.JSON(w, http.StatusBadRequest, err)
+			return
+		}
+
+		redisKey, err := buildNetflixRedisKey(movie.Url)
+		if err != nil {
+			srv.JSON(w, http.StatusInternalServerError, "")
+			return
+		}
+
+		_, err = redis.SetRedisValue(srv.Redis.RedisJSON, redisKey, movie)
+		if err != nil {
+			srv.JSON(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		srv.JSON(w, http.StatusCreated, nil)
+	}
+}
+
 func SearchHandler(srv server.Server) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
+		if r.Header.Get("ApiKey") != srv.Config.ApiKey {
+			srv.JSON(w, http.StatusForbidden, errors.New("wrong api key"))
+			return
+		}
+
 		var page int
-		fmt.Sscan(r.URL.Query().Get("p"), &page)
-		query := r.URL.Query().Get("q")
-		country := r.URL.Query().Get("c")
+		fmt.Sscan(r.URL.Query().Get("page"), &page)
+		query := r.URL.Query().Get("query")
+		country := r.URL.Query().Get("country")
 
 		docs, _, err := redis.Search(srv.Redis.RediSearch, query, page, country)
 		if err != nil {
@@ -74,6 +109,11 @@ func SearchHandler(srv server.Server) http.HandlerFunc {
 func GetMovieHandler(srv server.Server) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
+		if r.Header.Get("ApiKey") != srv.Config.ApiKey {
+			srv.JSON(w, http.StatusForbidden, errors.New("wrong api key"))
+			return
+		}
+
 		id, found := mux.Vars(r)["id"]
 		if !found {
 			srv.JSON(w, http.StatusBadRequest, nil)
@@ -94,31 +134,6 @@ func GetMovieHandler(srv server.Server) http.HandlerFunc {
 		}
 
 		srv.JSON(w, http.StatusOK, movie)
-	}
-}
-
-func SetMovieHandler(srv server.Server) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-
-		movie := Movie{}
-		if err := json.NewDecoder(r.Body).Decode(&movie); err != nil {
-			srv.JSON(w, http.StatusBadRequest, err)
-			return
-		}
-
-		redisKey, err := buildNetflixRedisKey(movie.Url)
-		if err != nil {
-			srv.JSON(w, http.StatusInternalServerError, "")
-			return
-		}
-
-		_, err = redis.SetRedisValue(srv.Redis.RedisJSON, redisKey, movie)
-		if err != nil {
-			srv.JSON(w, http.StatusInternalServerError, err)
-			return
-		}
-
-		srv.JSON(w, http.StatusCreated, nil)
 	}
 }
 

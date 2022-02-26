@@ -10,6 +10,8 @@ import (
 
 type Config struct {
 	Env           string
+	ApiKey        string
+	WriteApiKey   string
 	Port          string
 	RedisHost     string
 	RedisPassword string
@@ -29,6 +31,13 @@ func LoadConfig(env *string) (Config, error) {
 		return Config{}, fmt.Errorf("PORT cannot be empty")
 	}
 
+	apiKey := os.Getenv("API_KEY")
+	if apiKey == "" {
+		return Config{}, fmt.Errorf("API_KEY cannot be empty")
+	}
+
+	writeApiKey := os.Getenv("WRITE_API_KEY")
+
 	redisHost := os.Getenv("REDIS_HOST")
 	if redisHost == "" {
 		return Config{}, fmt.Errorf("REDIS_HOST cannot be empty")
@@ -41,6 +50,8 @@ func LoadConfig(env *string) (Config, error) {
 
 	return Config{
 		Env:           environment,
+		ApiKey:        apiKey,
+		WriteApiKey:   writeApiKey,
 		Port:          port,
 		RedisHost:     redisHost,
 		RedisPassword: redisPassword,

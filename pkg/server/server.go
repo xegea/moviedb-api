@@ -12,7 +12,7 @@ import (
 )
 
 type Server struct {
-	cfg    config.Config
+	Config config.Config
 	Redis  redis.Redis
 	router *mux.Router
 }
@@ -23,7 +23,7 @@ func NewServer(
 	r *mux.Router,
 ) Server {
 	srv := Server{
-		cfg:    cfg,
+		Config: cfg,
 		Redis:  redis,
 		router: r,
 	}
@@ -44,10 +44,10 @@ func (s Server) JSON(w http.ResponseWriter, status int, data interface{}) {
 }
 
 func (s Server) Run() error {
-	addr := fmt.Sprintf(":%s", s.cfg.Port)
-	if s.cfg.Env == "dev" {
-		log.Printf("local env http://localhost:%s", s.cfg.Port)
-		addr = fmt.Sprintf("localhost:%s", s.cfg.Port)
+	addr := fmt.Sprintf(":%s", s.Config.Port)
+	if s.Config.Env == "dev" {
+		log.Printf("local env http://localhost:%s", s.Config.Port)
+		addr = fmt.Sprintf("localhost:%s", s.Config.Port)
 	}
 	return http.ListenAndServe(
 		addr,
