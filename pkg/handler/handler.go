@@ -14,24 +14,25 @@ import (
 )
 
 type Movie struct {
-	Title         map[string]string `json:",omitempty"`
-	Url           string            `json:",omitempty"`
-	ContentRating string            `json:",omitempty"`
-	Type          string            `json:",omitempty"`
-	Description   map[string]string `json:",omitempty"`
-	Genre         string            `json:",omitempty"`
-	Image         string            `json:",omitempty"`
-	ReleaseDate   int64             `json:",omitempty"`
-	Director      []string          `json:",omitempty"`
-	Actors        []string          `json:",omitempty"`
-	Trailer       []Trailer         `json:",omitempty"`
+	Title         string    `json:",omitempty"`
+	Url           string    `json:",omitempty"`
+	ContentRating string    `json:",omitempty"`
+	Type          string    `json:",omitempty"`
+	Description   string    `json:",omitempty"`
+	Genre         string    `json:",omitempty"`
+	Image         string    `json:",omitempty"`
+	ReleaseDate   int64     `json:",omitempty"`
+	Director      []string  `json:",omitempty"`
+	Actors        []string  `json:",omitempty"`
+	Trailer       []Trailer `json:",omitempty"`
+	Updated       int64     `json:",omitempty"`
 }
 
 type Trailer struct {
-	Name         map[string]string `json:",omitempty"`
-	Description  map[string]string `json:",omitempty"`
-	Url          string            `json:",omitempty"`
-	ThumbnailUrl string            `json:",omitempty"`
+	Name         string `json:",omitempty"`
+	Description  string `json:",omitempty"`
+	Url          string `json:",omitempty"`
+	ThumbnailUrl string `json:",omitempty"`
 }
 
 func SetMovieHandler(srv server.Server) http.HandlerFunc {
@@ -139,23 +140,20 @@ func GetMovieHandler(srv server.Server) http.HandlerFunc {
 
 func buildNetflixRedisKey(movieUrl string) (string, error) {
 
-	var redisKey string
-	redisKey = strings.Replace(movieUrl, "https://www.netflix.com", "netflix", 1)
-	redisKey = strings.Replace(redisKey, "/es/title/", ":es-es:", 1)
-	redisKey = strings.Replace(redisKey, "/es-es/title/", ":es-es:", 1)
-	redisKey = strings.Replace(redisKey, "/en-us/title/", ":en-us:", 1)
-	redisKey = strings.Replace(redisKey, "/de-de/title/", ":de-de:", 1)
-	redisKey = strings.Replace(redisKey, "/de/title/", ":de-de:", 1)
-	redisKey = strings.Replace(redisKey, "/gb/title/", ":en-gb:", 1)
-	redisKey = strings.Replace(redisKey, "/title/", ":en-us:", 1)
+	var key string
+	key = strings.Replace(movieUrl, "https://www.netflix.com", "netflix", 1)
+	key = strings.Replace(key, "/es/title/", ":es-es:", 1)
+	key = strings.Replace(key, "/es-es/title/", ":es-es:", 1)
+	key = strings.Replace(key, "/es-en/title/", ":es-en:", 1)
+	key = strings.Replace(key, "/en-us/title/", ":en-us:", 1)
+	key = strings.Replace(key, "/de-de/title/", ":de-de:", 1)
+	key = strings.Replace(key, "/de/title/", ":de-de:", 1)
+	key = strings.Replace(key, "/gb/title/", ":en-gb:", 1)
+	key = strings.Replace(key, "/title/", ":en-us:", 1)
 
-	if strings.Contains(redisKey, "es-en") {
-		return "", errors.New("incorrect key " + redisKey)
+	if strings.Contains(key, "de-en") {
+		return "", errors.New("incorrect key " + key)
 	}
 
-	if strings.Contains(redisKey, "de-en") {
-		return "", errors.New("incorrect key " + redisKey)
-	}
-
-	return redisKey, nil
+	return key, nil
 }
