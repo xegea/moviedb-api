@@ -76,9 +76,9 @@ func SearchHandler(srv server.Server) http.HandlerFunc {
 		var page int
 		fmt.Sscan(r.URL.Query().Get("page"), &page)
 		query := r.URL.Query().Get("query")
-		country := r.URL.Query().Get("country")
+		culture := r.URL.Query().Get("culture")
 
-		docs, _, err := redis.Search(srv.Redis.RediSearch, query, page, country)
+		docs, _, err := redis.Search(srv.Redis.RediSearch, query, page, culture)
 		if err != nil {
 			srv.JSON(w, http.StatusInternalServerError, err)
 			return
