@@ -32,10 +32,11 @@ func createClients(pool *redis.Pool) map[string]*redisearch.Client {
 	// TODO Create clients for every index dinamically retrieving the list of created indexs
 	// indexs, err = redis.String(conn.Do("FT._LIST"))
 
-	clients["idx:title:es"] = redisearch.NewClientFromPool(pool, "idx:title:es")
-	clients["idx:title:us"] = redisearch.NewClientFromPool(pool, "idx:title:us")
-	clients["idx:title:de"] = redisearch.NewClientFromPool(pool, "idx:title:de")
-	clients["idx:title:gb"] = redisearch.NewClientFromPool(pool, "idx:title:gb")
+	clients["idx:title:es-es"] = redisearch.NewClientFromPool(pool, "idx:title:es-es")
+	clients["idx:title:en-es"] = redisearch.NewClientFromPool(pool, "idx:title:en-es")
+	clients["idx:title:en-us"] = redisearch.NewClientFromPool(pool, "idx:title:en-us")
+	clients["idx:title:de-de"] = redisearch.NewClientFromPool(pool, "idx:title:de-de")
+	clients["idx:title:en-gb"] = redisearch.NewClientFromPool(pool, "idx:title:en-gb")
 
 	return clients
 }
@@ -47,9 +48,9 @@ func createClients(pool *redis.Pool) map[string]*redisearch.Client {
 // 	// _, err = conn.Do("FT.CREATE", redis.Args{}.Add("idx:title:us").AddFlat(parameters)...)
 // }
 
-func Search(rs RediSearch, query string, page int, country string) ([]redisearch.Document, int, error) {
+func Search(rs RediSearch, query string, page int, culture string) ([]redisearch.Document, int, error) {
 
-	docs, total, err := resolveClient(rs, country).Search(redisearch.NewQuery(fmt.Sprint("@title:", query, "*")).
+	docs, total, err := resolveClient(rs, culture).Search(redisearch.NewQuery(fmt.Sprint("@title:", query, "*")).
 		// SetReturnFields("title", "description", "type"). // if SetReturnFields
 		Limit((page-1)*10, 10))
 	if err != nil {
@@ -59,29 +60,17 @@ func Search(rs RediSearch, query string, page int, country string) ([]redisearch
 	return docs, total, nil
 }
 
-func resolveClient(rs RediSearch, country string) *redisearch.Client {
+func resolveClient(rs RediSearch, culture string) *redisearch.Client {
 	var client *redisearch.Client
 
-	switch country {
-	case "es":
+	switch culture {
+	case "es-es", "en-es", "en-us", "de-de", "en-gb":
 		{
-			client = rs.clients["idx:title:es"]
-		}
-	case "us":
-		{
-			client = rs.clients["idx:title:us"]
-		}
-	case "de":
-		{
-			client = rs.clients["idx:title:de"]
-		}
-	case "gb":
-		{
-			client = rs.clients["idx:title:gb"]
+			client = rs.clients["idx:title:"+culture]
 		}
 	default:
 		{
-			client = rs.clients["idx:title:es"]
+			client = rs.clients["idx:title:es-es"]
 		}
 	}
 	return client
