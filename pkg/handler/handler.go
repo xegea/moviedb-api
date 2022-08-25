@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math"
 	"net/http"
 	"strings"
 
@@ -74,11 +75,14 @@ func SearchHandler(srv server.Server) http.HandlerFunc {
 		}
 
 		var page int
+		// TODO rowsPerPage by config
+		rowsPerPage := 8
+
 		fmt.Sscan(r.URL.Query().Get("page"), &page)
 		query := r.URL.Query().Get("query")
 		culture := r.URL.Query().Get("culture")
 
-		docs, _, err := redis.Search(srv.Redis.RediSearch, query, page, culture)
+		docs, total, err := redis.Search(srv.Redis.RediSearch, query, page, rowsPerPage, culture)
 		if err != nil {
 			srv.JSON(w, http.StatusInternalServerError, err)
 			return
@@ -103,8 +107,25 @@ func SearchHandler(srv server.Server) http.HandlerFunc {
 			movieList = append(movieList, content)
 		}
 
-		srv.JSON(w, http.StatusOK, movieList)
+		type PagedMovieList struct {
+			MovieList []Movie
+			LastPage  bool
+		}
+
+		var lastPage = IsLastPage(page, rowsPerPage, total)
+		var pagedMovieList PagedMovieList = PagedMovieList{
+			MovieList: movieList,
+			LastPage:  lastPage,
+		}
+
+		srv.JSON(w, http.StatusOK, pagedMovieList)
 	}
+}
+
+func IsLastPage(page, rowsPerPage, total int) bool {
+	totalPages := math.Ceil((float64(total)/float64(rowsPerPage))*1) / 1
+
+	return float64(page) >= totalPages
 }
 
 func GetMovieHandler(srv server.Server) http.HandlerFunc {

@@ -48,11 +48,11 @@ func createClients(pool *redis.Pool) map[string]*redisearch.Client {
 // 	// _, err = conn.Do("FT.CREATE", redis.Args{}.Add("idx:title:us").AddFlat(parameters)...)
 // }
 
-func Search(rs RediSearch, query string, page int, culture string) ([]redisearch.Document, int, error) {
+func Search(rs RediSearch, query string, page, rowsPerPage int, culture string) ([]redisearch.Document, int, error) {
 
 	docs, total, err := resolveClient(rs, culture).Search(redisearch.NewQuery(fmt.Sprint("@title:", query, "*")).
 		// SetReturnFields("title", "description", "type"). // if SetReturnFields
-		Limit((page-1)*10, 10))
+		Limit((page-1)*rowsPerPage, rowsPerPage))
 	if err != nil {
 		return nil, 0, err
 	}
