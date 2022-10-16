@@ -1,6 +1,6 @@
 # moviedb-api
 
-[moviedb-api][] exposes methods to Fetch and Save movies in a Redis DB.
+[moviedb-api][] API methods to Fetch and Save movies in a Redis DB.
 
 https://moviedb-io.herokuapp.com (check [moviedb-io][] project on GitHub) fetches movies and TV shows from [moviedb-api].
 
